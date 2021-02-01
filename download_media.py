@@ -24,6 +24,8 @@ headers = {
 	'sec-ch-ua-mobile': '?0',
 	'accept': '*/*',
 	'x-requested-with': 'XMLHttpRequest',
+	'x-csrftoken': 'baJJfHx4oUsVgv7qv1FBLdm7japAtZvB',
+	'x-ig-app-id': '936619743392459',
 	'sec-fetch-site': 'same-origin',
 	'sec-fetch-mode': 'cors',
 	'sec-fetch-dest': 'empty',

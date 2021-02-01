@@ -18,4 +18,8 @@ def send_media(message):
 		medias = [ types.InputMediaDocument(media) for media in medias ]
 		bot.send_media_group(message.chat.id, medias)
 
-bot.polling(none_stop=True)
+bot.send_message(144589481, "polling restart")
+try:
+    bot.polling(none_stop=True)
+except Exception as ex:
+    bot.send_message(ADMIN, ex)

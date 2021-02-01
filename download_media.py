@@ -36,7 +36,7 @@ def get_media_json(link: str):
 	headers['referer'] = link
 	headers['user-agent'] = headers_agent_list[random.randrange(0,4)]
 	link = link.split('/')
-	shortcode_id = link[-1] if (link[-1] and '?' not in link[-1]) else link[-2]
+	shortcode_id = link[link.index('www.instagram.com') + 2] if (link[-1] if (link[-1] and '?' not in link[-1]) else link[-2]) == (link[link.index('www.instagram.com') + 2]) else (link[-1] if (link[-1] and '?' not in link[-1]) else link[-2])
 	variables = f'{{"shortcode":"{shortcode_id}","has_threaded_comments":true}}'
 	get_params = {
 		'query_hash': '2c4c2e343a8f64c625ba02b2aa12c7f8',

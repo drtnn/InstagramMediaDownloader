@@ -13,7 +13,7 @@ def contentText(message):
 def send_media(message):
 	medias =  get_media_json(message.text)
 	if not medias:
-		bot.send_message(message.chat.id, "<b>Произошла ошибка</b>\nВведена неверная ссылка.", parse_mode='html')
+		bot.send_message(message.chat.id, "<b>Произошла ошибка</b>\nВведена неверная ссылка или профиль пользователя закрыт.", parse_mode='html')
 	else:
 		medias = [ types.InputMediaDocument(media) for media in medias ]
 		bot.send_media_group(message.chat.id, medias)

@@ -15,11 +15,18 @@ def send_media(message):
 	if not medias:
 		bot.send_message(message.chat.id, "<b>Произошла ошибка</b>\nВведена неверная ссылка или профиль пользователя закрыт.", parse_mode='html')
 	else:
-		medias = [ types.InputMediaDocument(media) for media in medias ]
-		bot.send_media_group(message.chat.id, medias)
+		medias_content = [ types.InputMediaDocument(media) for media in medias ]
+		try:
+			bot.send_media_group(message.chat.id, medias_content)
+		except:
+			text = ''
+			for index, media in enumerate(medias):
+				text += f'🎞 <a href=\'{media}\'>Файл №{index + 1}</a>\n'
+			bot.send_message(message.chat.id, text, parse_mode='html')
+				    
 
 bot.send_message(144589481, "polling restart")
 try:
     bot.polling(none_stop=True)
 except Exception as ex:
-    bot.send_message(ADMIN, ex)
+    bot.send_message(144589481, ex)

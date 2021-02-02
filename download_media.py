@@ -53,6 +53,7 @@ def get_media_json(link: str):
 				links.append(get_media_link(media['node']))
 		else:
 			links.append(get_media_link(responsive['data']['shortcode_media']))
+		print(links)
 		return links
 	except Exception as e:
 		return None

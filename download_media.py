@@ -1,62 +1,76 @@
 from config import *
 
-headers_agent_list = [
-        "Mozilla/5.0 (Windows NT 5.1; rv:41.0) Gecko/20100101"\
-        " Firefox/41.0",
-        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_11_2)"\
-        " AppleWebKit/601.3.9 (KHTML, like Gecko) Version/9.0.2"\
-        " Safari/601.3.9",
-        "Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:15.0)"\
-        " Gecko/20100101 Firefox/15.0.1",
-        "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"\
-        " (KHTML, like Gecko) Chrome/42.0.2311.135 Safari/537.36"\
-        " Edge/12.246",
-		"Mozilla/5.0 (Macintosh; Intel Mac OS X 11_1_0) AppleWebKit/537.36"\
-		" (KHTML, like Gecko) Chrome/88.0.4324.96 Safari/537.36",
-        ]
+class InstagramUser:
+	def __init__(self, username):
+		self.username = username
+		self.user_id = self.get_user_id()
 
-headers = {
-	'authority': 'www.instagram.com',
-	'pragma': 'no-cache',
-	'cache-control': 'no-cache',
-	'sec-ch-ua': '"Chromium";v="88", "Google Chrome";v="88", ";Not A Brand";v="99"',
-	'x-ig-www-claim': 'hmac.AR2OIZnV3Xot5AT_boqr-HjjPl9BObBv1RN7LCdlgdQflWvw',
-	'sec-ch-ua-mobile': '?0',
-	'accept': '*/*',
-	'x-requested-with': 'XMLHttpRequest',
-	'x-csrftoken': 'baJJfHx4oUsVgv7qv1FBLdm7japAtZvB',
-	'x-ig-app-id': '936619743392459',
-	'sec-fetch-site': 'same-origin',
-	'sec-fetch-mode': 'cors',
-	'sec-fetch-dest': 'empty',
-	'accept-language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
-}
+	def get_user_id(self):
+		result = requests.get(f'https://www.instagram.com/{self.username}/?__a=1', headers=headers).json()
+		self.is_private = result['graphql']['user']['is_private'] if 'graphql' in result else None
+		return int(result['graphql']['user']['id']) if 'graphql' in result else None
 
-def get_media_json(link: str):
-	BASE_URL = 'https://www.instagram.com/graphql/query/?'
-	# example = 'query_hash=2c4c2e343a8f64c625ba02b2aa12c7f8&variables=%7B%22shortcode%22%3A%22B1MOgEcisGw%22%2C%22child_comment_count%22%3A3%2C%22fetch_comment_count%22%3A40%2C%22parent_comment_count%22%3A24%2C%22has_threaded_comments%22%3Atrue%7D'
-	headers['referer'] = link
-	headers['user-agent'] = headers_agent_list[random.randrange(0,4)]
-	link = link.split('/')
-	shortcode_id = link[link.index('www.instagram.com') + 2] if (link[-1] if (link[-1] and '?' not in link[-1]) else link[-2]) == (link[link.index('www.instagram.com') + 2]) else (link[-1] if (link[-1] and '?' not in link[-1]) else link[-2])
-	variables = f'{{"shortcode":"{shortcode_id}","has_threaded_comments":true}}'
-	get_params = {
-		'query_hash': '2c4c2e343a8f64c625ba02b2aa12c7f8',
-		'variables': variables
-	}
-	ws_url = BASE_URL + urllib.parse.urlencode(get_params)
-	links = []
-	try:
-		responsive = requests.get(ws_url, headers=headers).json()
-		if 'edge_sidecar_to_children' in responsive['data']['shortcode_media']:
-			for media in responsive['data']['shortcode_media']['edge_sidecar_to_children']['edges']:
-				links.append(get_media_link(media['node']))
-		else:
-			links.append(get_media_link(responsive['data']['shortcode_media']))
-		print(links)
-		return links
-	except Exception as e:
-		return None
+	def get_stories(self):
+		if not self.user_id:
+			return
+		ws_url = f'https://i.instagram.com/api/v1/feed/reels_media/?reel_ids={self.user_id}'
+		# example =  'https://i.instagram.com/api/v1/feed/reels_media/?reel_ids=111111111'
+		headers['user-agent'] = headers_agent_list[random.randrange(0,4)]
+		links = []
+		try:
+			responsive = requests.get(ws_url, headers=headers_stories).json()
+			if responsive['reels_media']:
+				for story in responsive['reels_media'][0]['items']:
+					links.append(self.get_story_link(story))
+				print(links)
+				return links
+		except Exception as e:
+			return
+		
+	def get_story_link(self, responsive: dict):
+		return responsive['video_versions'][0]['url'] if 'video_versions' in responsive else responsive['image_versions2']['candidates'][0]['url']
 
-def get_media_link(responsive: dict):
-	return responsive['video_url'] if responsive['is_video'] else responsive['display_url']
+class InstagramPost:
+	def __init__(self, link):
+		self.link = link
+
+	def get_media(self): #Получить список ссылок фото и видео из поста
+		BASE_URL = 'https://www.instagram.com/graphql/query/?'
+		# example = 'query_hash=2c4c2e343a8f64c625ba02b2aa12c7f8&variables=%7B%22shortcode%22%3A%22B1MOgEcisGw%22%2C%22child_comment_count%22%3A3%2C%22fetch_comment_count%22%3A40%2C%22parent_comment_count%22%3A24%2C%22has_threaded_comments%22%3Atrue%7D'
+		headers['referer'] = self.link
+		headers['user-agent'] = headers_agent_list[random.randrange(0,4)]
+		link = urllib.parse.urlparse(self.link)[2].split('/')
+		shortcode_id = self.get_shortcode()
+		if not shortcode_id:
+			return
+		variables = f'{{"shortcode":"{shortcode_id}","has_threaded_comments":true}}'
+		get_params = {
+			'query_hash': '2c4c2e343a8f64c625ba02b2aa12c7f8',
+			'variables': variables
+		}
+		ws_url = BASE_URL + urllib.parse.urlencode(get_params)
+		links = []
+		try:
+			responsive = requests.get(ws_url, headers=headers).json()
+			if 'edge_sidecar_to_children' in responsive['data']['shortcode_media']:
+				for media in responsive['data']['shortcode_media']['edge_sidecar_to_children']['edges']:
+					links.append(self.get_media_link(media['node']))
+			else:
+				links.append(self.get_media_link(responsive['data']['shortcode_media']))
+			print(links)
+			return links
+		except Exception as e:
+			return
+
+	def get_shortcode(self):
+		link = urllib.parse.urlparse(self.link)[2].split('/')
+		if not ('p' in link or 'tv' in link):
+			return None
+		return link[link.index('p') + 1] if 'p' in link else link[link.index('tv') + 1]
+
+	def get_media_link(self, responsive: dict): #Получить ссылку на фото/видео из JSON
+		return responsive['video_url'] if responsive['is_video'] else responsive['display_url']
+
+# class InstagramStory:
+# 	def __init__(self, link):
+# 		self.link = link

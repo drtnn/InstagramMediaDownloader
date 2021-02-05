@@ -11,7 +11,8 @@ def getPostCommand(message):
 	bot.register_next_step_handler(message, send_media)
 
 def send_media(message):
-	medias = InstagramPost(message.text).get_media()
+	post = InstagramPost(message.text)
+	medias = post.media
 	if not medias:
 		bot.send_message(message.chat.id, "<b>Произошла ошибка</b>\nВведена неверная ссылка или профиль пользователя закрыт.", parse_mode='html')
 	else:
@@ -20,9 +21,8 @@ def send_media(message):
 			bot.send_media_group(message.chat.id, medias_content)
 		except:
 			text = ''
-			for index, media in enumerate(medias):
-				text += f'🎞 <a href=\'{media}\'>Файл №{index + 1}</a>\n'
-			bot.send_message(message.chat.id, text, parse_mode='html')
+			for media in medias:
+				bot.send_message(message.chat.id, f'🎞 <a href=\'{media}\'>Содержимое поста <b>@{post.user.username}</b></a>', parse_mode='html')
 
 @bot.message_handler(commands=['get_stories'])
 def getStoriesCommand(message):
@@ -31,7 +31,7 @@ def getStoriesCommand(message):
 
 def send_stories(message):
 	user = InstagramUser(message.text)
-	if user.is_private:
+	if user.is_private or not user.user_id:
 		bot.send_message(message.chat.id, "<b>Произошла ошибка</b>\nПрофиль закрыт или не существует.", parse_mode='html')
 	else:
 		medias = user.get_stories()
@@ -43,12 +43,31 @@ def send_stories(message):
 				bot.send_media_group(message.chat.id, medias_content) #Поправить ошибку при отправлении слишком больших файлов
 			except:
 				text = ''
-				for index, media in enumerate(medias):
-					text += f'🎞 <a href=\'{media}\'>Файл №{index + 1}</a>\n'
-				bot.send_message(message.chat.id, text, parse_mode='html') #Поправить ошибку при отправлении очень длинных сообщений: ENTITIES_TOO_LONG	    
+				for media in medias:
+					bot.send_message(message.chat.id, f'📹 <a href=\'{media}\'>История <b>@{message.text}</b></a>', parse_mode='html') #Поправить ошибку при отправлении очень длинных сообщений: ENTITIES_TOO_LONG	    
+
+@bot.message_handler(commands=['get_story'])
+def getStoryCommand(message):
+	bot.send_message(message.chat.id, "Пришли мне ссылку на историю пользователя Instagram, а я тебе историю.", parse_mode='html')
+	bot.register_next_step_handler(message, send_story)
+
+def send_story(message):
+	story = InstagramStory(message.text)
+	user = story.user
+	if user.is_private or not user.user_id:
+		bot.send_message(message.chat.id, "<b>Произошла ошибка</b>\nПрофиль закрыт или не существует.", parse_mode='html')
+	else:
+		if not story.story_media:
+			bot.send_message(message.chat.id, "<b>История отсутствует.</b>", parse_mode='html')
+		else:
+			try:
+				bot.send_document(message.chat.id, story.story_media) #Поправить ошибку при отправлении слишком больших файлов
+			except:
+				bot.send_message(message.chat.id, f'📹 <a href=\'{story.story_media}\'>История <b>@{user.username}</b></a>', parse_mode='html') #Поправить ошибку при отправлении очень длинных сообщений: ENTITIES_TOO_LONG	    
+
 
 bot.send_message(144589481, "polling restart")
 try:
-    bot.polling(none_stop=True)
+	bot.polling(none_stop=True)
 except Exception as ex:
     bot.send_message(144589481, ex)

@@ -10,6 +10,9 @@ def textCommand(message):
 			send_media(message)
 		elif 'instagram.com/stories/' in message.text:
 			send_story(message)
+		elif 'instagram.com/' in message.text:
+			message.text = urllib.parse.urlparse(message.text)[2].split('/')[1]
+			send_stories(message)
 		else:
 			bot.send_message(message.chat.id, "<b>Произошла ошибка</b>\nВведена неверная ссылка.", parse_mode='html')
 	elif InstagramUser(message.text).user_id:

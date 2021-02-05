@@ -81,10 +81,11 @@ class InstagramStory:
 	def __init__(self, link):
 		self.link = link
 		self.user = InstagramUser(self.get_username_from_link())
+		self.swipe_link = None
 		self.story_media = self.get_story()
 
 	def get_story(self): #Получить ссылку на историю
-		if not self.user.user_id:
+		if not self.user.user_id or not self.link:
 			return
 		ws_url = f'https://i.instagram.com/api/v1/feed/reels_media/?reel_ids={self.user.user_id}'
 		headers['user-agent'] = headers_agent_list[random.randrange(0,4)]
@@ -93,6 +94,11 @@ class InstagramStory:
 			if responsive['reels_media']:
 				for story in responsive['reels_media'][0]['items']:
 					if story['pk'] == self.get_shortcode():
+						if 'story_cta' in story:
+							try:
+								self.swipe_link = story['story_cta'][0]['links'][0]['webUri']
+							except:
+								pass
 						return self.get_story_link(story)
 				return None
 		except Exception as e:

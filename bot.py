@@ -7,7 +7,7 @@ def startCommand(message):
 
 @bot.message_handler(commands=['get_post'])
 def getPostCommand(message):
-	bot.send_message(message.chat.id, "Пришли мне ссылку на пост, а я тебе фото и видео.", parse_mode='html')
+	bot.send_message(message.chat.id, "Пришли мне ссылку на пост.", parse_mode='html')
 	bot.register_next_step_handler(message, send_media)
 
 def send_media(message):
@@ -26,7 +26,7 @@ def send_media(message):
 
 @bot.message_handler(commands=['get_stories'])
 def getStoriesCommand(message):
-	bot.send_message(message.chat.id, "Пришли мне имя пользователя Instagram, а я тебе истории.", parse_mode='html')
+	bot.send_message(message.chat.id, "Пришли мне имя пользователя Instagram.", parse_mode='html')
 	bot.register_next_step_handler(message, send_stories)
 
 def send_stories(message):
@@ -48,7 +48,7 @@ def send_stories(message):
 
 @bot.message_handler(commands=['get_story'])
 def getStoryCommand(message):
-	bot.send_message(message.chat.id, "Пришли мне ссылку на историю пользователя Instagram, а я тебе историю.", parse_mode='html')
+	bot.send_message(message.chat.id, "Пришли мне ссылку на историю пользователя Instagram.", parse_mode='html')
 	bot.register_next_step_handler(message, send_story)
 
 def send_story(message):
@@ -60,14 +60,18 @@ def send_story(message):
 		if not story.story_media:
 			bot.send_message(message.chat.id, "<b>История отсутствует.</b>", parse_mode='html')
 		else:
+			key = types.InlineKeyboardMarkup()
+			if story.swipe_link:
+				key.add(
+					types.InlineKeyboardButton('🔗 Прикрепленная ссылка', url=story.swipe_link)
+				)
 			try:
-				bot.send_document(message.chat.id, story.story_media) #Поправить ошибку при отправлении слишком больших файлов
+				bot.send_document(message.chat.id, story.story_media, reply_markup=key) #Поправить ошибку при отправлении слишком больших файлов
 			except:
-				bot.send_message(message.chat.id, f'📹 <a href=\'{story.story_media}\'>История <b>@{user.username}</b></a>', parse_mode='html') #Поправить ошибку при отправлении очень длинных сообщений: ENTITIES_TOO_LONG	    
-
+				bot.send_message(message.chat.id, f'📹 <a href=\'{story.story_media}\'>История <b>@{user.username}</b></a>', parse_mode='html', reply_markup=key) #Поправить ошибку при отправлении очень длинных сообщений: ENTITIES_TOO_LONG	    
 
 bot.send_message(144589481, "polling restart")
-try:
-	bot.polling(none_stop=True)
-except Exception as ex:
-    bot.send_message(144589481, ex)
+# try:
+bot.polling(none_stop=True)
+# except Exception as ex:
+#     bot.send_message(144589481, ex)

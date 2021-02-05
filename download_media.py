@@ -38,6 +38,7 @@ class InstagramPost:
 	def __init__(self, link):
 		self.link = link
 		self.user = None
+		self.caption = None
 		self.media = self.get_media()
 
 	def get_media(self): #Получить ссылки фото и видео из поста
@@ -63,6 +64,8 @@ class InstagramPost:
 					links.append(self.get_media_link(media['node']))
 			else:
 				links.append(self.get_media_link(responsive['data']['shortcode_media']))
+			if responsive['data']['shortcode_media']['edge_media_to_caption']['edges']:
+				self.caption = responsive['data']['shortcode_media']['edge_media_to_caption']['edges'][0]['node']['text']
 			print(links)
 			return links
 		except Exception as e:

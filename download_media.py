@@ -4,16 +4,33 @@ class InstagramUser:
 	def __init__(self, username):
 		self.username = username
 		self.is_private = None
-		self.user_id = self.get_user_id()
+		self.profile_pic_url = None
+		self.user_id = None
+		self.followers = None
+		self.followings = None
+		self.full_name = None
+		self.biography = None
+		self.posts_count = None
+		self.posts = None
+		# self.highlights = None
+		self.get_user()
 
-	def get_user_id(self): #Получить ID пользователя
+	def get_user(self): #Получить ID пользователя
 		result = requests.get(f'https://www.instagram.com/{self.username}/?__a=1', headers=headers)
-		try:
-			result = result.json()
+		try:		
+			if not 'graphql' in result.json():
+				return
+			user = result.json()['graphql']['user']
 		except:
 			return
-		self.is_private = result['graphql']['user']['is_private'] if 'graphql' in result else None
-		return int(result['graphql']['user']['id']) if 'graphql' in result else None
+		self.biography = user['biography'] if user['biography'] else None
+		self.profile_pic_url = user['profile_pic_url_hd'] if user['profile_pic_url_hd'] else None
+		self.full_name = user['full_name'] if user['full_name'] else None
+		self.posts_count = user['edge_owner_to_timeline_media']['count'] if user['edge_owner_to_timeline_media']['count'] else None
+		self.followers = user['edge_followed_by']['count'] if user['edge_followed_by']['count'] else None
+		self.followings = user['edge_follow']['count'] if user['edge_follow']['count'] else None
+		self.user_id = int(user['id']) if user['id'] else None
+		self.is_private = user['is_private'] if user['is_private'] else None
 
 	def get_stories(self): #Получить ссылки на истории пользователя
 		if not self.user_id:
@@ -117,3 +134,7 @@ class InstagramStory:
 	def get_username_from_link(self): #Получить имя пользователя
 		link = urllib.parse.urlparse(self.link)[2].split('/')
 		return link[link.index('stories') + 1] if 'stories' in link else None
+
+
+
+InstagramUser('saaka')

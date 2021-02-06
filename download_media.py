@@ -135,6 +135,3 @@ class InstagramStory:
 		link = urllib.parse.urlparse(self.link)[2].split('/')
 		return link[link.index('stories') + 1] if 'stories' in link else None
 
-
-
-InstagramUser('saaka')

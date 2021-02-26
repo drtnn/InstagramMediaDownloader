@@ -7,19 +7,20 @@ def startCommand(message):
 
 @bot.message_handler(content_types=['text'])
 def textCommand(message):
-	if message.text == '/start':
+	message_text = message.text.lower()
+	if message_text == '/start':
 		startCommand(message)
-	elif validators.url(message.text):
-		if 'instagram.com/p/' in message.text or 'instagram.com/tv/' in message.text:
-			send_media(message.chat.id, message.text)
-		elif 'instagram.com/stories/' in message.text:
-			send_story(message.chat.id, message.text)
-		elif 'instagram.com/' in message.text:
-			send_profile(message.chat.id, urllib.parse.urlparse(message.text)[2].split('/')[1])
+	elif validators.url(message_text):
+		if 'instagram.com/p/' in message_text or 'instagram.com/tv/' in message_text:
+			send_media(message.chat.id, message_text)
+		elif 'instagram.com/stories/' in message_text:
+			send_story(message.chat.id, message_text)
+		elif 'instagram.com/' in message_text:
+			send_profile(message.chat.id, urllib.parse.urlparse(message_text)[2].split('/')[1])
 		else:
 			bot.send_message(message.chat.id, "<b>Произошла ошибка</b>\nВведена неверная ссылка.", parse_mode='html')
-	elif InstagramUser(message.text).user_id:
-		send_profile(message.chat.id, message.text)
+	elif InstagramUser(message_text).user_id:
+		send_profile(message.chat.id, message_text)
 	else:
 		bot.send_message(message.chat.id, "<b>Произошла ошибка</b>\nАккаунт не найден.", parse_mode='html')
 

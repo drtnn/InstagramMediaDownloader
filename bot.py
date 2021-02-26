@@ -10,7 +10,7 @@ def textCommand(message):
 	message_text = message.text.lower()
 	if message_text == '/start':
 		startCommand(message)
-	elif validators.url(message_text):
+	elif 'instagram.com/' in message_text:
 		if 'instagram.com/p/' in message_text or 'instagram.com/tv/' in message_text:
 			send_media(message.chat.id, message_text)
 		elif 'instagram.com/stories/' in message_text:
@@ -22,7 +22,7 @@ def textCommand(message):
 	elif InstagramUser(message_text).user_id:
 		send_profile(message.chat.id, message_text)
 	else:
-		bot.send_message(message.chat.id, "<b>Произошла ошибка</b>\nАккаунт не найден.", parse_mode='html')
+		bot.send_message(message.chat.id, "<b>Произошла ошибка</b>", parse_mode='html')
 
 def send_media(chat_id, post_link):
 	post = InstagramPost(post_link)

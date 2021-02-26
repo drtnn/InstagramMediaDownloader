@@ -43,7 +43,6 @@ class InstagramUser:
 			if responsive['reels_media']:
 				for story in responsive['reels_media'][0]['items']:
 					links.append(self.get_story_link(story))
-				print(links)
 				return links
 		except Exception as e:
 			return
@@ -83,7 +82,6 @@ class InstagramPost:
 				links.append(self.get_media_link(responsive['data']['shortcode_media']))
 			if responsive['data']['shortcode_media']['edge_media_to_caption']['edges']:
 				self.caption = responsive['data']['shortcode_media']['edge_media_to_caption']['edges'][0]['node']['text']
-			print(links)
 			return links
 		except Exception as e:
 			return

@@ -1,21 +1,6 @@
 from config import *
 from download_media import *
 
-# @bot.message_handler(commands=['get_post'])
-# def getPostCommand(message):
-# 	bot.send_message(message.chat.id, "Пришли мне ссылку на пост.", parse_mode='html')
-# 	bot.register_next_step_handler(message, send_media)
-
-# @bot.message_handler(commands=['get_stories'])
-# def getStoriesCommand(message):
-# 	bot.send_message(message.chat.id, "Пришли мне имя пользователя Instagram.", parse_mode='html')
-# 	bot.register_next_step_handler(message, send_stories)
-
-# @bot.message_handler(commands=['get_story'])
-# def getStoryCommand(message):
-# 	bot.send_message(message.chat.id, "Пришли мне ссылку на историю пользователя Instagram.", parse_mode='html')
-# 	bot.register_next_step_handler(message, send_story)
-
 @bot.message_handler(commands=['start'])
 def startCommand(message):
 	bot.send_message(message.chat.id, "<b>Привет, я помогу тебе скачать фото и видео из Instagram</b>\nПросто пришли мне ссылку на пост или историю, в ответ ты получишь нужные тебе файлы. Также можешь прислать мне никнейм пользователя в Instagram, а я скачаю для тебя все актуальные истории.", parse_mode='html')
@@ -50,7 +35,6 @@ def send_media(chat_id, post_link):
 		try:
 			bot.send_media_group(chat_id, medias_content)
 		except:
-			text = ''
 			for media in medias:
 				bot.send_message(chat_id, f'🎞 <a href=\'{media}\'>Содержимое поста <b>@{post.user.username}</b></a>', parse_mode='html')
 		if post.caption:
@@ -91,7 +75,6 @@ def send_stories(chat_id, username):
 			try:
 				bot.send_media_group(chat_id, stories_content) #Поправить ошибку при отправлении слишком больших файлов
 			except:
-				text = ''
 				for story in stories:
 					bot.send_message(chat_id, f'📹 <a href=\'{story}\'>История <b>@{username}</b></a>', parse_mode='html')
 
@@ -118,7 +101,6 @@ def send_story(chat_id, story_link):
 
 @bot.callback_query_handler(func=lambda c:True)
 def inline(c):
-	print(c.data)
 	if c.data.startswith('stories:'):
 		send_stories(c.message.chat.id, c.data[8:])
 

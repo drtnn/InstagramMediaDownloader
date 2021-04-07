@@ -1,4 +1,8 @@
-from config import *
+import headers
+import random
+import requests
+import urllib
+
 
 class InstagramUser:
 	def __init__(self, username):
@@ -15,9 +19,10 @@ class InstagramUser:
 		# self.highlights = None
 		self.get_user()
 
-	def get_user(self): #Получить ID пользователя
-		result = requests.get(f'https://www.instagram.com/{self.username}/?__a=1', headers=headers)
-		try:		
+	def get_user(self):  # Получить ID пользователя
+		result = requests.get(
+			f'https://www.instagram.com/{self.username}/?__a=1', headers=headers.headers)
+		try:
 			if not 'graphql' in result.json():
 				return
 			user = result.json()['graphql']['user']
@@ -32,17 +37,20 @@ class InstagramUser:
 		self.user_id = int(user['id']) if user['id'] else None
 		self.is_private = user['is_private'] if user['is_private'] else None
 
-	def get_stories(self): #Получить ссылки на истории пользователя
+	def get_stories(self):  # Получить ссылки на истории пользователя
 		if not self.user_id:
 			return
 		ws_url = f'https://i.instagram.com/api/v1/feed/reels_media/?reel_ids={self.user_id}'
-		headers['user-agent'] = headers_agent_list[random.randrange(0,4)]
+		headers.headers['user-agent'] = headers.headers_agent_list[random.randrange(
+			0, 4)]
 		stories = []
 		try:
-			responsive = requests.get(ws_url, headers=headers_stories).json()
+			responsive = requests.get(
+				ws_url, headers=headers.headers_stories).json()
 			if responsive['reels_media']:
 				for story_responsive in responsive['reels_media'][0]['items']:
-					story = InstagramStory(user=self, story_media=self.__get_story_link(story_responsive), preview=story_responsive['image_versions2']['candidates'][0]['url'])
+					story = InstagramStory(user=self, story_media=self.__get_story_link(
+						story_responsive), preview=story_responsive['image_versions2']['candidates'][0]['url'])
 					if 'story_cta' in story_responsive:
 						try:
 							story.swipe_link = story_responsive['story_cta'][0]['links'][0]['webUri']
@@ -50,11 +58,12 @@ class InstagramUser:
 							pass
 					stories.append(story)
 				return stories
-		except Exception as e:
+		except:
 			return
-		
-	def __get_story_link(self, responsive: dict): #Получить ссылку на фото/видео
+
+	def __get_story_link(self, responsive: dict):  # Получить ссылку на фото/видео
 		return responsive['video_versions'][0]['url'] if 'video_versions' in responsive else responsive['image_versions2']['candidates'][0]['url']
+
 
 class InstagramPost:
 	def __init__(self, link):
@@ -64,10 +73,11 @@ class InstagramPost:
 		self.preview = None
 		self.media = self.get_media()
 
-	def get_media(self): #Получить ссылки фото и видео из поста
+	def get_media(self):  # Получить ссылки фото и видео из поста
 		BASE_URL = 'https://www.instagram.com/graphql/query/?'
-		headers['referer'] = self.link
-		headers['user-agent'] = headers_agent_list[random.randrange(0,4)]
+		headers.headers['referer'] = self.link
+		headers.headers['user-agent'] = headers.headers_agent_list[random.randrange(
+			0, 4)]
 		shortcode_id = self.__get_shortcode()
 		if not shortcode_id:
 			return
@@ -79,30 +89,35 @@ class InstagramPost:
 		ws_url = BASE_URL + urllib.parse.urlencode(get_params)
 		links = []
 		try:
-			responsive = requests.get(ws_url, headers=headers).json()
-			self.user = InstagramUser(responsive['data']['shortcode_media']['owner']['username'])
+			responsive = requests.get(ws_url, headers=headers.headers).json()
+			self.user = InstagramUser(
+				responsive['data']['shortcode_media']['owner']['username'])
 			self.preview = []
 			if 'edge_sidecar_to_children' in responsive['data']['shortcode_media']:
 				for media in responsive['data']['shortcode_media']['edge_sidecar_to_children']['edges']:
 					self.preview.append(media['node']['display_url'])
 					links.append(self.__get_media_link(media['node']))
 			else:
-				self.preview.append(responsive['data']['shortcode_media']['display_url'])
-				links.append(self.__get_media_link(responsive['data']['shortcode_media']))
+				self.preview.append(
+					responsive['data']['shortcode_media']['display_url'])
+				links.append(self.__get_media_link(
+					responsive['data']['shortcode_media']))
 			if responsive['data']['shortcode_media']['edge_media_to_caption']['edges']:
 				self.caption = responsive['data']['shortcode_media']['edge_media_to_caption']['edges'][0]['node']['text']
 			return links
-		except Exception as e:
+		except:
 			return
 
-	def __get_shortcode(self): #Получить ID поста
+	def __get_shortcode(self):  # Получить ID поста
 		link = urllib.parse.urlparse(self.link)[2].split('/')
 		if not ('p' in link or 'tv' in link):
 			return None
 		return link[link.index('p') + 1] if 'p' in link else link[link.index('tv') + 1]
 
-	def __get_media_link(self, responsive: dict): #Получить ссылку на фото/видео из JSON
+	# Получить ссылку на фото/видео из JSON
+	def __get_media_link(self, responsive: dict):
 		return responsive['video_url'] if responsive['is_video'] else responsive['display_url']
+
 
 class InstagramStory:
 	def __init__(self, link=None, user=None, swipe_link=None, story_media=None, preview=None):
@@ -119,13 +134,15 @@ class InstagramStory:
 			self.story_media = story_media
 			self.preview = preview
 
-	def get_story(self): #Получить ссылку на историю
+	def get_story(self):  # Получить ссылку на историю
 		if not self.user.user_id or not self.link:
 			return
 		ws_url = f'https://i.instagram.com/api/v1/feed/reels_media/?reel_ids={self.user.user_id}'
-		headers['user-agent'] = headers_agent_list[random.randrange(0,4)]
+		headers.headers['user-agent'] = headers.headers_agent_list[random.randrange(
+			0, 4)]
 		try:
-			responsive = requests.get(ws_url, headers=headers_stories).json()
+			responsive = requests.get(
+				ws_url, headers=headers.headers_stories).json()
 			if responsive['reels_media']:
 				for story in responsive['reels_media'][0]['items']:
 					if story['pk'] == self.__get_shortcode():
@@ -137,19 +154,50 @@ class InstagramStory:
 						self.preview = story['image_versions2']['candidates'][0]['url']
 						return self.__get_story_link(story)
 				return None
-		except Exception as e:
+		except:
 			return
-		
-	def __get_story_link(self, responsive: dict): #Получить ссылку на фото/видео
+
+	def __get_story_link(self, responsive: dict):  # Получить ссылку на фото/видео
 		return responsive['video_versions'][0]['url'] if 'video_versions' in responsive else responsive['image_versions2']['candidates'][0]['url']
 
-	def __get_shortcode(self): #Получить ID истории
+	def __get_shortcode(self):  # Получить ID истории
 		link = urllib.parse.urlparse(self.link)[2].split('/')
 		return link[link.index('stories') + 2] if 'stories' in link else None
 
-	def __get_username_from_link(self): #Получить имя пользователя
+	def __get_username_from_link(self):  # Получить имя пользователя
 		link = urllib.parse.urlparse(self.link)[2].split('/')
 		return link[link.index('stories') + 1] if 'stories' in link else None
 
 	def __str__(self):
 		return f'link – {self.link}, user – {self.user}, swipe_link – {self.swipe_link}, story_media – {self.story_media}'
+
+# class InstagramHighlight:
+# 	def __init__(self, link):
+# 		self.link = link
+# 		self.user = None
+# 		self.highlight_id = self.get_highlight_id()
+# 		self.highlight_media = self.get_highlight_media()
+
+# 	def get_highlight_media(self): #Получить ссылку на историю
+# 		if not self.link or not self.highlight_id:
+# 			return
+# 		ws_url = f'https://i.instagram.com/api/v1/feed/reels_media/?reel_ids=highlight%3A{self.highlight_id}'
+# 		headers.headers['user-agent'] = headers.headers_agent_list[random.randrange(0,4)]
+# 		try:
+# 			responsive = requests.get(ws_url, headers=headers.headers_stories).json()
+# 			if responsive['reels_media']:
+# 				for story in responsive['reels_media'][0]['items']:
+# 					if story['pk'] == self.__get_shortcode():
+# 						# if 'story_cta' in story:
+# 						# 	try:
+# 						# 		self.swipe_link = story['story_cta'][0]['links'][0]['webUri']
+# 						# 	except:
+# 						# 		pass
+# 						return self.__get_story_link(story)
+# 				return None
+# 		except Exception as e:
+# 			return
+
+# 	def get_highlight_id(self):
+# 		link = urllib.parse.urlparse(self.link)[2].split('/')
+# 		return link[link.index('highlights') + 1] if 'highlights' in link else None

@@ -1,5 +1,5 @@
 import config
-from download_media import InstagramPost, InstagramStory, InstagramUser
+from download_media import InstagramPost, InstagramStory, InstagramUser, InstagramHighlight
 from telebot import types
 
 
@@ -10,16 +10,15 @@ def send_post(chat_id, post_link):  # Отправить пост
 		config.bot.send_message(
 			chat_id, "🛑 <b>Введена неверная ссылка</b>", parse_mode='html')
 	elif post.user and medias:
-		try:
-			for media in medias:
+		for media in medias:
+			try:
 				config.bot.send_document(chat_id=chat_id, data=media)
-		except:
-			for media in medias:
+			except:
 				config.bot.send_message(
 					chat_id, f'🎞 <a href=\'{media}\'>Содержимое поста <b>@{post.user.username}</b></a>', parse_mode='html')
-		if post.caption:
-			config.bot.send_message(
-				chat_id, f'<a href=\'https://www.instagram.com/{post.user.username}/\'>@{post.user.username}</a>: {post.caption}', parse_mode='html')
+			if post.caption:
+				config.bot.send_message(
+					chat_id, f'<a href=\'https://www.instagram.com/{post.user.username}/\'>@{post.user.username}</a>: {post.caption}', parse_mode='html')
 	else:
 		config.bot.send_message(
 			chat_id, "🛑 <b>Ошибка</b>", parse_mode='html')
@@ -65,24 +64,17 @@ def send_stories(chat_id, username):  # Отправить истории
 			config.bot.send_message(
 				chat_id, "🛑 <b>Нет актуальных историй</b>", parse_mode='html')
 		else:
-			try:
-				for story in stories:
-					key = types.InlineKeyboardMarkup()
-					if story.swipe_link:
-						key.add(
-							types.InlineKeyboardButton(
-								'🔗 Прикрепленная ссылка', url=story.swipe_link)
-						)
+			for story in stories:
+				key = types.InlineKeyboardMarkup()
+				if story.swipe_link:
+					key.add(
+						types.InlineKeyboardButton(
+							'🔗 Прикрепленная ссылка', url=story.swipe_link)
+					)
+				try:
 					config.bot.send_document(
 						chat_id=chat_id, data=story.story_media, reply_markup=key)
-			except:
-				for story in stories:
-					key = types.InlineKeyboardMarkup()
-					if story.swipe_link:
-						key.add(
-							types.InlineKeyboardButton(
-								'🔗 Прикрепленная ссылка', url=story.swipe_link)
-						)
+				except:
 					config.bot.send_message(
 						chat_id, f'📹 <a href=\'{story.story_media}\'>История <b>@{username}</b></a>', parse_mode='html', reply_markup=key)
 	else:
@@ -116,6 +108,32 @@ def send_story(chat_id, story_link):  # Отправить историю
 			except:
 				config.bot.send_message(
 					chat_id, f'📹 <a href=\'{story.story_media}\'>История <b>@{user.username}</b></a>', parse_mode='html', reply_markup=key)
+	else:
+		config.bot.send_message(
+			chat_id, "🛑 <b>Ошибка</b>", parse_mode='html')
+
+
+def send_highlights(chat_id, highlight_link):  # Отправить хайлайт(ы)
+	highlights = InstagramHighlight(highlight_link)
+	user = highlights.user
+	if user:
+		if not highlights.highlight_media:
+			config.bot.send_message(
+				chat_id, "🛑 <b>Хайлайт отсутствует</b>", parse_mode='html')
+		else:
+			for highlight in highlights.highlight_media:
+				key = types.InlineKeyboardMarkup()
+				if highlight.swipe_link:
+					key.add(
+						types.InlineKeyboardButton(
+							'🔗 Прикрепленная ссылка', url=highlight.swipe_link)
+					)
+				try:
+					config.bot.send_document(
+						chat_id=chat_id, data=highlight.story_media, reply_markup=key)
+				except:
+					config.bot.send_message(
+						chat_id, f'📹 <a href=\'{highlight.story_media}\'>История <b>@{user.username}</b></a>', parse_mode='html', reply_markup=key)
 	else:
 		config.bot.send_message(
 			chat_id, "🛑 <b>Ошибка</b>", parse_mode='html')

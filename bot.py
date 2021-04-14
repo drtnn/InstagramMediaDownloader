@@ -8,26 +8,27 @@ import urllib
 
 @config.bot.message_handler(commands=['start'])
 def start_command(message):  # Команда /start
-	db_work.update_user(
-		message.from_user.id, message.from_user.username, message.from_user.first_name)
-	config.bot.send_message(message.from_user.id, "🙋🏻‍♂️ Привет, я бот для скачивания фото и видео из <pre>Instagram</pre>.\n\n🔗 Просто отправь ссылку на пост, историю или никнейм.\n\n💬 Информация по всем функциям бота доступна по команде /help", parse_mode='html')
+	try:
+		db_work.update_user(
+			message.from_user.id, message.from_user.username, message.from_user.first_name)
+	except:
+		config.bot.send_message(config.ADMIN, f'[DB ERROR] – {message.from_user.id}, {message.from_user.username}, {message.from_user.first_name}')
+	config.bot.send_message(message.from_user.id, "🙋🏻‍♂️ Привет, я бот для скачивания публикаций из <pre>Instagram</pre>.\n\n🔗 Просто отправь ссылку на пост, историю или никнейм.\n\n💬 Информация по всем функциям бота доступна по команде /help", parse_mode='html')
 
 
 @config.bot.message_handler(commands=['help'])
 def help_command(message):  # Команда /help
-	db_work.update_user(
-		message.from_user.id, message.from_user.username, message.from_user.first_name)
-	config.bot.send_message(message.from_user.id, "💭 Скачиваю весь контент из <pre>Instagram</pre>.\n\n🔗 Просто отправь ссылку на пост, историю или никнейм.\n\n\t🎞: <code>instagram.com/p/*****/</code>\n\t📹: <code>instagram.com/stories/drtagram/*****/</code>\n\t👤: <code>drtagram</code>\n\n💬 Чтобы отправить фото или видео другу в диалог, воспользуйся <pre>inline</pre>-режимом бота.\n\n\t🎞: <code>@InstagramMediaDownloadBot instagram.com/p/*****/</code>\n\t📹: <code>@InstagramMediaDownloadBot instagram.com/stories/drtagram/*****/</code>\n\t👤: <code>@InstagramMediaDownloadBot drtagram</code>", parse_mode='html')
+	config.bot.send_message(message.from_user.id, "💭 Скачиваю весь контент из <pre>Instagram</pre>.\n\n🔗 Просто отправь ссылку на пост, историю или никнейм.\n\n\t🎞: <code>instagram.com/p/*****/</code>\n\t📹: <code>instagram.com/stories/drtagram/*****/</code>\n\t👤: <code>drtagram</code>\n\n💬 Чтобы отправить публикацию другу в диалог, воспользуйся <pre>inline</pre>-режимом бота.\n\n\t🎞: <code>@InstagramMediaDownloadBot instagram.com/p/*****/</code>\n\t📹: <code>@InstagramMediaDownloadBot instagram.com/stories/drtagram/*****/</code>\n\t👤: <code>@InstagramMediaDownloadBot drtagram</code>", parse_mode='html')
 
 
 @config.bot.message_handler(content_types=['text'])
 def text_command(message):  # Ссылка на контент или профиль пользователя
 	if not ('via_bot' in message.json and message.json['via_bot']['is_bot']):
-		db_work.update_user(
-			message.from_user.id, message.from_user.username, message.from_user.first_name)
 		if 'instagram.com/' in message.text.lower():
 			if 'instagram.com/p/' in message.text.lower() or 'instagram.com/tv/' in message.text.lower():
 				send_media.send_post(message.from_user.id, message.text)
+			elif 'instagram.com/s/' in message.text.lower() or 'instagram.com/stories/highlights/' in message.text.lower():
+				send_media.send_highlights(message.from_user.id, message.text)
 			elif 'instagram.com/stories/' in message.text.lower():
 				send_media.send_story(message.from_user.id, message.text)
 			elif 'instagram.com/' in message.text.lower():
@@ -39,11 +40,12 @@ def text_command(message):  # Ссылка на контент или профи
 
 @config.bot.inline_handler(func=lambda query: len(query.query) > 0)
 def inline_query(query):
-	db_work.update_user(query.from_user.id,
-						query.from_user.username, query.from_user.first_name)
 	if 'instagram.com/' in query.query.lower():
 		if 'instagram.com/p/' in query.query.lower() or 'instagram.com/tv/' in query.query.lower():
 			inline_media.inline_post(query.from_user.id, query.query, query.id)
+		elif 'instagram.com/s/' in query.query.lower() or 'instagram.com/stories/highlights/' in query.query.lower():
+			inline_media.inline_highlight(
+				query.from_user.id, query.query, query.id)
 		elif 'instagram.com/stories/' in query.query.lower():
 			inline_media.inline_story(
 				query.from_user.id, query.query, query.id)
@@ -61,8 +63,6 @@ def inline_query(query):
 
 @config.bot.callback_query_handler(func=lambda c: True)
 def inline(c):  # Нажатие инлайн кнопок
-	db_work.update_user(c.from_user.id, c.from_user.username,
-						c.from_user.first_name)
 	if c.data.startswith('stories:'):
 		send_media.send_stories(c.from_user.id, c.data[8:])
 

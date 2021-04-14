@@ -138,7 +138,7 @@ class InstagramStory:
 		if not self.user.user_id or not self.link:
 			return
 		ws_url = f'https://i.instagram.com/api/v1/feed/reels_media/?reel_ids={self.user.user_id}'
-		headers.headers['user-agent'] = headers.headers_agent_list[random.randrange(
+		headers.headers_stories['user-agent'] = headers.headers_agent_list[random.randrange(
 			0, 4)]
 		try:
 			responsive = requests.get(
@@ -171,33 +171,53 @@ class InstagramStory:
 	def __str__(self):
 		return f'link – {self.link}, user – {self.user}, swipe_link – {self.swipe_link}, story_media – {self.story_media}'
 
-# class InstagramHighlight:
-# 	def __init__(self, link):
-# 		self.link = link
-# 		self.user = None
-# 		self.highlight_id = self.get_highlight_id()
-# 		self.highlight_media = self.get_highlight_media()
+class InstagramHighlight:
+	def __init__(self, link):
+		self.link = link
+		self.user = None
+		self.highlight_id = self.__parse_highlight_id(self.link) if link and 'instagram.com/stories/highlights/' in link else self.__get_highlight_id()
+		self.story_media_id = urllib.parse.urlparse(self.link).query.split('&')[0].replace('story_media_id=', '') if '?story_media_id=' in self.link else None
+		self.highlight_media = self.get_highlight_media()
 
-# 	def get_highlight_media(self): #Получить ссылку на историю
-# 		if not self.link or not self.highlight_id:
-# 			return
-# 		ws_url = f'https://i.instagram.com/api/v1/feed/reels_media/?reel_ids=highlight%3A{self.highlight_id}'
-# 		headers.headers['user-agent'] = headers.headers_agent_list[random.randrange(0,4)]
-# 		try:
-# 			responsive = requests.get(ws_url, headers=headers.headers_stories).json()
-# 			if responsive['reels_media']:
-# 				for story in responsive['reels_media'][0]['items']:
-# 					if story['pk'] == self.__get_shortcode():
-# 						# if 'story_cta' in story:
-# 						# 	try:
-# 						# 		self.swipe_link = story['story_cta'][0]['links'][0]['webUri']
-# 						# 	except:
-# 						# 		pass
-# 						return self.__get_story_link(story)
-# 				return None
-# 		except Exception as e:
-# 			return
+	def get_highlight_media(self): #Получить ссылку на историю
+		if self.highlight_id:
+			ws_url = f'https://i.instagram.com/api/v1/feed/reels_media/?reel_ids=highlight%3A{self.highlight_id}'
+			headers.headers_stories['user-agent'] = headers.headers_agent_list[random.randrange(0,4)]
+			try:
+				responsive = requests.get(ws_url, headers=headers.headers_stories).json()
+				if 'reels_media' in responsive and responsive['reels_media']:
+					self.user = InstagramUser(
+						responsive['reels_media'][0]['user']['username'])
+					highlights = []
+					for story_responsive in responsive['reels_media'][0]['items']:
+						story = InstagramStory(user=self, story_media=self.__get_highlight_link(
+							story_responsive), preview=story_responsive['image_versions2']['candidates'][0]['url'])
+						if 'story_cta' in story_responsive:
+							try:
+								story.swipe_link = story_responsive['story_cta'][0]['links'][0]['webUri']
+							except:
+								pass
+						if self.story_media_id and story_responsive['pk'] == self.story_media_id:
+							return [story]
+						elif not self.story_media_id:
+							highlights.append(story)
+					return highlights
+			except:
+				return
 
-# 	def get_highlight_id(self):
-# 		link = urllib.parse.urlparse(self.link)[2].split('/')
-# 		return link[link.index('highlights') + 1] if 'highlights' in link else None
+	def __get_highlight_link(self, responsive: dict):  # Получить ссылку на фото/видео
+		return responsive['video_versions'][0]['url'] if 'video_versions' in responsive else responsive['image_versions2']['candidates'][0]['url']
+
+	def __parse_highlight_id(self, link):
+		link = urllib.parse.urlparse(link)[2].split('/')
+		return link[link.index('highlights') + 1] if 'highlights' in link else None
+
+	def __get_highlight_id(self):
+		headers.headers_stories['user-agent'] = headers.headers_agent_list[random.randrange(0,4)]
+		try:
+			r = requests.get(url=self.link, headers=headers.headers_stories)
+			for responsive in r.history:
+				if responsive.next and responsive.is_redirect:
+					return self.__parse_highlight_id(responsive.next.url)
+		except:
+			return

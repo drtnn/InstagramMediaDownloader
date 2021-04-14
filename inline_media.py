@@ -1,6 +1,6 @@
 import config
 from telebot import types
-from download_media import InstagramPost, InstagramStory, InstagramUser
+from download_media import InstagramPost, InstagramStory, InstagramUser, InstagramHighlight
 
 
 def inline_error():
@@ -38,7 +38,10 @@ def inline_post(chat_id, post_link, query_id):  # Отправить пост и
 			))
 	else:
 		data.append(inline_error())
-	config.bot.answer_inline_query(query_id, data)
+	try:
+		config.bot.answer_inline_query(query_id, data)
+	except:
+		pass
 
 
 def inline_profile(chat_id, username, query_id):  # Отправить профиль пользователя инлайн
@@ -85,7 +88,10 @@ def inline_profile(chat_id, username, query_id):  # Отправить проф�
 				))
 	else:
 		data.append(inline_error())
-	config.bot.answer_inline_query(query_id, data)
+	try:
+		config.bot.answer_inline_query(query_id, data)
+	except:
+		pass
 
 
 def inline_story(chat_id, story_link, query_id):  # Отправить историю инлайн
@@ -111,4 +117,37 @@ def inline_story(chat_id, story_link, query_id):  # Отправить исто�
 		))
 	else:
 		data.append(inline_error())
-	config.bot.answer_inline_query(query_id, data)
+	try:
+		config.bot.answer_inline_query(query_id, data)
+	except:
+		pass
+
+
+def inline_highlight(chat_id, highlight_link, query_id):  # Отправить хайлайт инлайн
+	highlights = InstagramHighlight(highlight_link)
+	user = highlights.user
+	data = []
+	if user and user.user_id and not user.is_private and highlights.highlight_media:
+		for highlight_id, highlight in enumerate(highlights.highlight_media):
+			key = types.InlineKeyboardMarkup()
+			if highlight.swipe_link:
+				key.add(types.InlineKeyboardButton(
+					'🔗 Прикрепленная ссылка', url=highlight.swipe_link))
+			data.append(types.InlineQueryResultArticle(
+				id=highlight_id + 1,
+				title=f'📹 Хайлайт @{user.username}',
+				reply_markup=key,
+				input_message_content=types.InputTextMessageContent(
+						message_text=f'📹 <a href=\'{highlight.story_media}\'>Хайлайт <b>@{user.username}</b></a>',
+						parse_mode='html'
+						),
+				thumb_url=highlight.preview,
+				thumb_width=48,
+				thumb_height=48
+			))
+	else:
+		data.append(inline_error())
+	try:
+		config.bot.answer_inline_query(query_id, data)
+	except:
+		pass

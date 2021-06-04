@@ -3,6 +3,7 @@ import db_work
 from download_media import InstagramPost, InstagramStory, InstagramUser
 import inline_media
 import send_media
+import error_users
 import urllib
 
 
@@ -13,6 +14,7 @@ def start_command(message):  # Команда /start
 			message.from_user.id, message.from_user.username, message.from_user.first_name)
 	except:
 		config.bot.send_message(config.ADMIN, f'[DB ERROR] – {message.from_user.id}, {message.from_user.username}, {message.from_user.first_name}')
+		error_users.add_error_user(message.from_user.id, message.from_user.username, message.from_user.first_name)
 	config.bot.send_message(message.from_user.id, "🙋🏻‍♂️ Привет, я бот для скачивания публикаций из <pre>Instagram</pre>.\n\n🔗 Просто отправь ссылку на пост, историю или никнейм.\n\n💬 Информация по всем функциям бота доступна по команде /help", parse_mode='html')
 
 

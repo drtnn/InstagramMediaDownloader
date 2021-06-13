@@ -71,6 +71,6 @@ def inline(c):  # Нажатие инлайн кнопок
 
 config.bot.send_message(config.ADMIN, "polling restart")
 try:
-	config.bot.polling(none_stop=True)
+	config.bot.infinity_polling(timeout=5)
 except Exception as ex:
 	config.bot.send_message(config.ADMIN, ex)

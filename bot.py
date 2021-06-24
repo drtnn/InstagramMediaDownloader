@@ -13,7 +13,7 @@ def start_command(message):  # Команда /start
 		db_work.update_user(
 			message.from_user.id, message.from_user.username, message.from_user.first_name)
 	except:
-		config.bot.send_message(config.ADMIN, f'[DB ERROR] – {message.from_user.id}, {message.from_user.username}, {message.from_user.first_name}')
+		config.bot.send_message(config.ADMINS[0], f'[DB ERROR] – {message.from_user.id}, {message.from_user.username}, {message.from_user.first_name}')
 		error_users.add_error_user(message.from_user.id, message.from_user.username, message.from_user.first_name)
 	config.bot.send_message(message.from_user.id, "🙋🏻‍♂️ Привет, я бот для скачивания публикаций из <pre>Instagram</pre>.\n\n🔗 Просто отправь ссылку на пост, историю или никнейм.\n\n💬 Информация по всем функциям бота доступна по команде /help", parse_mode='html')
 
@@ -27,7 +27,7 @@ def help_command(message):  # Команда /help
 def text_command(message):  # Ссылка на контент или профиль пользователя
 	if not ('via_bot' in message.json and message.json['via_bot']['is_bot']):
 		if 'instagram.com/' in message.text.lower():
-			if 'instagram.com/p/' in message.text.lower() or 'instagram.com/tv/' in message.text.lower():
+			if 'instagram.com/p/' in message.text.lower() or 'instagram.com/tv/' in message.text.lower() or 'instagram.com/reel/' in message.text.lower():
 				send_media.send_post(message.from_user.id, message.text)
 			elif 'instagram.com/s/' in message.text.lower() or 'instagram.com/stories/highlights/' in message.text.lower():
 				send_media.send_highlights(message.from_user.id, message.text)
@@ -69,8 +69,8 @@ def inline(c):  # Нажатие инлайн кнопок
 		send_media.send_stories(c.from_user.id, c.data[8:])
 
 
-config.bot.send_message(config.ADMIN, "polling restart")
+config.bot.send_message(config.ADMINS[0], "polling restart")
 try:
 	config.bot.infinity_polling(timeout=5)
 except Exception as ex:
-	config.bot.send_message(config.ADMIN, ex)
+	config.bot.send_message(config.ADMINS[0], ex)

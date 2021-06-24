@@ -1,4 +1,4 @@
-import os
+from config import COOKIE
 
 
 headers_agent_list = [
@@ -31,7 +31,7 @@ headers = {
 	'sec-fetch-mode': 'cors',
 	'sec-fetch-dest': 'empty',
 	'accept-language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
-	'cookie': os.environ['cookie'],
+	'cookie': COOKIE,
 }
 
 headers_stories = {
@@ -50,5 +50,5 @@ headers_stories = {
 	'sec-fetch-dest': 'empty',
 	'referer': 'https://www.instagram.com/',
 	'accept-language': 'ru-RU,ru;q=0.9,en-US;q=0.8,en;q=0.7',
-	'cookie': os.environ['cookie'],
+	'cookie': COOKIE,
 }

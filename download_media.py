@@ -110,9 +110,14 @@ class InstagramPost:
 
 	def __get_shortcode(self):  # Получить ID поста
 		link = urllib.parse.urlparse(self.link)[2].split('/')
-		if not ('p' in link or 'tv' in link):
-			return None
-		return link[link.index('p') + 1] if 'p' in link else link[link.index('tv') + 1]
+		if 'p' in link:
+			return link[link.index('p') + 1]
+		elif 'tv' in link:
+			return link[link.index('tv') + 1]
+		elif 'reel' in link:
+			return link[link.index('reel') + 1]
+		else:
+			return
 
 	# Получить ссылку на фото/видео из JSON
 	def __get_media_link(self, responsive: dict):

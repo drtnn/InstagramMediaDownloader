@@ -1,9 +1,11 @@
-import os
+from config import DATABASE_URL
 import peewee
+import sqlalchemy
 
-
-db = peewee.PostgresqlDatabase(os.environ['db_name'], host=os.environ['db_host'], port=int(
-	os.environ['db_port']), user=os.environ['db_user'], password=os.environ['db_password'])
+DATABASE_FORM = sqlalchemy.engine.url.make_url(DATABASE_URL)
+db = peewee.PostgresqlDatabase(DATABASE_FORM.database, host=DATABASE_FORM.host, port=DATABASE_FORM.port,
+                               user=DATABASE_FORM.username,
+                               password=DATABASE_FORM.password)
 
 
 class User(peewee.Model):

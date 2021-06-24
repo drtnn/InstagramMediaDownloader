@@ -43,7 +43,7 @@ def text_command(message):  # Ссылка на контент или профи
 @config.bot.inline_handler(func=lambda query: len(query.query) > 0)
 def inline_query(query):
 	if 'instagram.com/' in query.query.lower():
-		if 'instagram.com/p/' in query.query.lower() or 'instagram.com/tv/' in query.query.lower():
+		if 'instagram.com/p/' in query.query.lower() or 'instagram.com/tv/' in query.query.lower() or 'instagram.com/reel/' in query.query.lower():
 			inline_media.inline_post(query.from_user.id, query.query, query.id)
 		elif 'instagram.com/s/' in query.query.lower() or 'instagram.com/stories/highlights/' in query.query.lower():
 			inline_media.inline_highlight(
